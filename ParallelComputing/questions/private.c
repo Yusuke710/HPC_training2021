@@ -1,7 +1,7 @@
 #include <stdio.h>
-#include <omp.h>
 //add code here
-#include <math.h>
+
+
 //
 #include <unistd.h>
 #include <time.h>
@@ -16,7 +16,7 @@ int main() {
 
     start = time(NULL);
     //add code here
-    #pragma omp parallel for private(x) reduction(+:sum)
+    
     //              
     for(int i=0; i<sizeof(array)/sizeof(int); ++i) 
     {
@@ -25,7 +25,7 @@ int main() {
 
         //add code here
         x = pow(array[i],2);
-        sum += x;
+        
         //
     }  
     printf("sum of the array is %d\n", sum); 

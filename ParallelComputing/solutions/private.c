@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include <omp.h>
 //add code here
+#include <omp.h>
 #include <math.h>
 //
 #include <unistd.h>

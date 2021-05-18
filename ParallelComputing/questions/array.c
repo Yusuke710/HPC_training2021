@@ -1,5 +1,7 @@
 #include <stdio.h>
-#include <omp.h>
+//add code here
+
+//
 #include <unistd.h>
 #include <time.h>
 

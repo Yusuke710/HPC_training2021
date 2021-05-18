@@ -1,5 +1,7 @@
 #include <stdio.h>
+//add code here
 #include <omp.h>
+//
 #include <unistd.h>
 #include <time.h>
 
@@ -26,9 +28,9 @@ int main() {
         sum += array[i];
         //
     }  
-    //add code here
+    
     printf("sum of the array is %d\n", sum); 
-    //
+    
     end = time(NULL); 
 
     printf("took %ld seconds to process\n", end - start);    

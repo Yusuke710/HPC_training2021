@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <omp.h>
+//add code here
+
+//
 #include <time.h>
 
 int main ()
