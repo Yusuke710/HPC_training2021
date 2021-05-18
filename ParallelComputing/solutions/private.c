@@ -35,7 +35,7 @@ int main() {
     }
     else
     {
-        printf("false, check your #pragma\n");
+        printf("wrong answer\n");
     }
     
     end = time(NULL); 

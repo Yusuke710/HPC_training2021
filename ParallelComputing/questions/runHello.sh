@@ -6,6 +6,6 @@
 #SBATCH --partition=
 
 gcc -fopenmp -o hello hello.c
-./hello
+time ./hello
 
 
