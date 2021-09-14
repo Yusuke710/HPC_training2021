@@ -8,4 +8,4 @@ The workshop video is uploaded on Monash DeepNeuron's Youtube channel
 week1 - Nector cloud\
 week2 - Compiler\
 week3 - Intro to HPC\
-week4 - Parallel computing\
+week4 - Parallel computing
