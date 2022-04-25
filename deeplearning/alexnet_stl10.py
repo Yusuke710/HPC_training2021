@@ -1,4 +1,3 @@
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -17,7 +16,7 @@ import matplotlib.pyplot as plt
 #the size of our mini batches
 batch_size     = 64
 #How many itterations of our dataset
-num_epochs     = 20
+num_epochs     = 10
 #optimizer learning rate
 learning_rate  = 1e-4
 #initialise best valid accuracy 
@@ -36,10 +35,6 @@ device = torch.device(GPU_indx if torch.cuda.is_available() else 'cpu')
 
 
 #Prepare a composition of transforms
-#transforms.Compose will perform the transforms in order
-#NOTE: some transform only take in a PIL image, others only a Tensor
-#EG Resize and ToTensor take in a PIL Image, Normalize takes in a Tensor
-#Refer to documentation
 transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Resize(144),
@@ -49,12 +44,6 @@ transform = transforms.Compose([
 
 #Define our STL10T Datasets
 #https://pytorch.org/docs/stable/torchvision/datasets.html
-#train_data = datasets.MNIST(data_set_root, train=True, download=True, transform=transform)
-#test_data = datasets.MNIST(data_set_root, train=False, download=True, transform=transform)
-
-#train_data = datasets.CIFAR10(data_set_root, train=True, download=True, transform=transform)
-#test_data = datasets.CIFAR10(data_set_root, train=False, download=True, transform=transform)
-
 train_data = datasets.STL10(data_set_root, split='train', download=True, transform=transform)
 test_data = datasets.STL10(data_set_root, split='test', download=True, transform=transform)
 
@@ -71,60 +60,34 @@ n_valid_examples = len(train_data) - n_train_examples
 train_data, valid_data = torch.utils.data.random_split(train_data, [n_train_examples, n_valid_examples],
                                                        generator=torch.Generator().manual_seed(42))
 
-#IMPORTANT TO KNOW!!!!!!!!!
-#Here we pass the random_split function a manual seed, this is very important as if we did not do this then 
-#everytime we randomly split our training and validation set we would get different splits!!!
-#For example if we saved our model and reloaded it in the future to train some more, the dataset that we now use to
-#train with will undoubtably contain datapoints that WERE in the validation set initially!!
-#Our model would therefore be trained with both validation and training data -- very bad!!!
-#Setting the manual seed to the same value everytime prevents this!
-
-
 print(f'Number of training examples: {len(train_data)}')
 print(f'Number of validation examples: {len(valid_data)}')
 print(f'Number of testing examples: {len(test_data)}')
 
 
 #Create the training, Validation and Evaluation/Test Datasets
-#It is best practice to separate your data into these three Datasets
-#Though depending on your task you may only need Training + Evaluation/Test or maybe only a Training set
-#(It also depends on how much data you have)
-#https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataloader
 train_loader = dataloader.DataLoader(train_data, shuffle=True, batch_size=batch_size)
 valid_loader = dataloader.DataLoader(valid_data, batch_size=batch_size)
 test_loader  = dataloader.DataLoader(test_data, batch_size=batch_size)
 
 
-#create a dataloader itterable object
-dataiter = iter(train_loader)
-#sample from the itterable object
-images, labels = dataiter.next()
-
-#create an instance of our network
-#set channels_in to the number of channels of the dataset images
-#net = models.resnet18(pretrained=True)
+# define the netwrok to use
 net = models.alexnet(pretrained=True)
-#net.conv1 = nn.Conv2d(1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
-#num_ftrs = net.fc.in_features
 num_ftrs = net.classifier[6].in_features
 net.fc = nn.Linear(num_ftrs, 10)
 net.fc = net.fc.to(device)
 net = net.to(device)
 #view the network
+print('-----------------------------')
+print('Defined Deeplearning Network:')
 print(net)
-
-#pass image through network to check it's working
-out = net(images.to(device))
-#check output shape
-out.shape
+print('-----------------------------')
 
 
 #Pass our network parameters to the optimiser set our lr as the learning_rate
 optimizer = optim.Adam(net.parameters(), lr = learning_rate)
-
 #Define a Cross Entropy Loss
 loss_fun = nn.CrossEntropyLoss()
-
 
 #This function should perform a single training epoch using our training data
 def train(net, device, loader, optimizer, loss_fun):
@@ -135,12 +98,6 @@ def train(net, device, loader, optimizer, loss_fun):
     #Set Network in train mode
     net.train()
     for i, (x, y) in enumerate(loader):
-    #for x, y in loader:
-
-        #print(i)
-        #print(x.shape)
-        #print(y)
-        
         #Forward pass of image through network and get output
         fx = net(x.to(device))
         
@@ -156,7 +113,6 @@ def train(net, device, loader, optimizer, loss_fun):
         
         #create the cumulative sum of the loss and acc
         epoch_loss += loss.item()
-        #log the loss for plotting
 
     epoch_loss /=  len(loader)
         
@@ -171,13 +127,7 @@ def evaluate(net, device, loader, loss_fun):
     epoch_loss = 0
     epoch_acc = 0
     
-    #Set network in evaluation mode
-    #Layers like Dropout will be disabled
-    #Layers like Batchnorm will stop calculating running mean and standard deviation
-    #and use current stored values
-    #(More on these layer types soon!)
     net.eval()
-    
     with torch.no_grad():
         for i, (x, y) in enumerate(loader):
             #Forward pass of image through network
@@ -186,12 +136,13 @@ def evaluate(net, device, loader, loss_fun):
             y = y.to(device)
             #Calculate loss using loss function
             loss = loss_fun(fx, y)
-            #log the cumulative sum of the acc
-            epoch_acc += (fx.argmax(1) == y).sum().item()
             
             #log the cumulative sum of the loss
             epoch_loss += loss.item()
-            
+
+            #log the cumulative sum of the acc
+            epoch_acc += (fx.argmax(1) == y).sum().item()
+
     epoch_loss /=  len(loader)
     epoch_acc /= len(loader.dataset)
     #return the accuracy from the epoch     
@@ -204,7 +155,7 @@ validation_loss_logger = []
 validation_acc_logger = []
 training_acc_logger = []
 
-#This implements our training loop
+# run training 
 for epoch in range(num_epochs):
     
     #call the training function and pass training dataloader etc
@@ -213,17 +164,12 @@ for epoch in range(num_epochs):
     training_loss_logger.append(train_loss)
     validation_loss_logger.append(valid_loss)
 
-    #call the evaluate function and pass the dataloader for both ailidation and training
-    temp, train_acc = evaluate(net, device, train_loader, loss_fun)
-    validation_acc_logger.append(valid_acc)
-    training_acc_logger.append(train_acc)
-
     if (valid_acc > best_valid_acc):
         best_valid_acc = valid_acc
         if save_checkpoint:
             print("Saving Model")
             torch.save(net, model_name)
-    print(f'| Epoch: {epoch+1:02} | Train Acc: {train_acc*100:05.2f}% | Val. Acc: {valid_acc*100:05.2f}% |')
+    print(f'| Epoch: {epoch+1:02} | Train Loss: {train_loss:.2f}% | Val. Loss: {valid_loss:.2f}% | Val. Acc: {valid_acc*100:05.2f}%')
     
 print("Training Complete")
 
@@ -233,21 +179,15 @@ plt.plot(train_x, training_loss_logger, c = "y")
 valid_x = np.linspace(0, num_epochs, len(validation_loss_logger))
 plt.plot(valid_x, validation_loss_logger, c = "k")
 
-plt.title("Resnet18 MNIST Training Loss")
+plt.title("Alexnet STL10 Training Loss")
 plt.legend(["Training loss", "Validation loss"])
+plt.savefig('Alexnet_STL10_log.png')
 
-plt.figure(figsize = (10,10))
-train_x = np.linspace(0, num_epochs, len(training_acc_logger))
-plt.plot(train_x, training_acc_logger, c = "y")
-valid_x = np.linspace(0, num_epochs, len(validation_acc_logger))
-plt.plot(valid_x, validation_acc_logger, c = "k")
 
-plt.title("Resnet18 MNIST Accuracy")
-plt.legend(["Training accuracy", "Validation accuracy"])
 
-"""# Evaluate"""
 
+# evaluate on test set 
 #call the evaluate function and pass the evaluation/test dataloader etc
 net = torch.load(model_name)
-temp, test_acc = evaluate(net, device, test_loader, loss_fun)
+_, test_acc = evaluate(net, device, test_loader, loss_fun)
 print("The total test accuracy is: %.2f%%" %(test_acc*100))
