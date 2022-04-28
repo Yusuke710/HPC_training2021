@@ -169,7 +169,7 @@ for epoch in range(num_epochs):
         if save_checkpoint:
             print("Saving Model")
             torch.save(net, model_name)
-    print(f'| Epoch: {epoch+1:02} | Train Loss: {train_loss:.2f}% | Val. Loss: {valid_loss:.2f}% | Val. Acc: {valid_acc*100:05.2f}%')
+    print(f'| Epoch: {epoch+1:02} | Train Loss: {train_loss:.2f} | Val. Loss: {valid_loss:.2f} | Val. Acc: {valid_acc*100:05.2f}%')
     
 print("Training Complete")
 
